@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Test Chat NodeJS</title>
+        <style>
+            #messages li:nth-child(odd) { background: #eee;}
+			li {font-size: 25px;}
+			#texteenvoi {width: 50%;}
+			footer{
+				position:absolute;
+				bottom:0;
+				width:100%;
+				padding-top:50px;
+				height:50px;
+			}
+        </style>
+    </head>
+ 
+    <body>
+        <h1>Test Chat NodeJS</h1>
+
+
+        <div id="chat">
+            <ul id="messages">
+            
+            </ul>
+        </div>
+
+        <footer>
+            <form action="" method="post" id="formulaire_chat">
+                <input type="text" name="message" id="texteenvoi" placeholder="Votre message..." size="50" autofocus />
+                <input type="submit" id="envoi_message" value="Envoyer" />
+            </form>
+        </footer>
+
+        <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+
+            // Connexion à socket.io
+            // Ce qui est entre parenthèse est à changer en fonction de l'adresse du serveur
+            var socket = io.connect('http://node1.codenvy.io:35149');
+
+            // On demande le pseudo, on l'envoie au serveur et on l'affiche dans le titre
+            var pseudo = prompt('Quel est votre pseudo ?');
+            socket.emit('nouveau_client', pseudo);
+            document.title = pseudo + ' - ' + document.title;
+
+            // Quand on reçoit un message, on l'insère dans la page
+            socket.on('message', function(data) {
+                insereMessage(data.pseudo, data.message);
+            });
+
+            // Quand un nouveau client se connecte, on affiche l'information
+            socket.on('nouveau_client', function(pseudo) {
+                $('#messages').append('<p><em>' + pseudo + ' a rejoint le Chat !</em></p>');
+            });
+
+            // Lorsqu'on envoie le formulaire, on transmet le message et on l'affiche sur la page
+            $('#formulaire_chat').submit(function () {
+                var message = $('#texteenvoi').val();
+                socket.emit('message', message); // Transmet le message aux autres
+                insereMessage(pseudo, message); // Affiche le message aussi sur notre page
+                $('#texteenvoi').val('').focus(); // Vide la zone de Chat et remet le focus dessus
+                return false; // Permet de bloquer l'envoi "classique" du formulaire
+            });
+            
+            // Ajoute un message dans la page
+            function insereMessage(pseudo, message) {
+                $('#messages').append('<p><li><strong>' + pseudo + '</strong> : ' + message + '</li></p>');
+            }
+        </script>
+    </body>
+</html>
